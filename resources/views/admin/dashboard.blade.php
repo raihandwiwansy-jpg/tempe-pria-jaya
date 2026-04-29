@@ -17,7 +17,6 @@
             <button class="flex items-center gap-4 bg-white p-2 pr-6 rounded-2xl shadow-sm border border-gray-100 hover:bg-gray-50 transition-all focus:outline-none">
                 <div class="relative w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-green-100">
                     <span class="material-symbols-rounded">notifications</span>
-                    {{-- Badge Notifikasi --}}
                     @if(auth()->user()->unreadNotifications->count() > 0)
                         <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 border-2 border-white rounded-full text-[10px] flex items-center justify-center font-bold animate-bounce">
                             {{ auth()->user()->unreadNotifications->count() }}
@@ -47,7 +46,7 @@
                                 <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 shrink-0">
                                     <span class="material-symbols-rounded text-sm">info</span>
                                 </div>
-                                <div>
+                                <div class="flex-grow">
                                     <p class="text-[11px] text-gray-600 font-bold leading-snug mb-1">
                                         {{ $notification->data['pesan'] ?? 'Ada aktivitas baru di sistem' }}
                                     </p>
@@ -97,16 +96,28 @@
 
     {{-- Log Aktivitas Sistem (History) --}}
     <div class="mb-12">
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-yellow-100">
                     <span class="material-symbols-rounded">history</span>
                 </div>
                 <div>
                     <h3 class="text-xl font-black text-gray-800 tracking-tight">Log Aktivitas</h3>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Riwayat 10 Pemberitahuan Terakhir</p>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Riwayat Pemberitahuan Sistem</p>
                 </div>
             </div>
+            
+            {{-- Tombol Bersihkan Semua --}}
+            @if(auth()->user()->notifications->count() > 0)
+                <form action="{{ route('admin.notifications.clearAll') }}" method="POST" onsubmit="return confirm('Bree, yakin mau hapus SEMUA riwayat log?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-2xl hover:bg-red-100 transition-all group">
+                        <span class="material-symbols-rounded text-sm group-hover:rotate-12 transition-transform">delete_sweep</span>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Bersihkan Semua Log</span>
+                    </button>
+                </form>
+            @endif
         </div>
         
         <div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
@@ -116,11 +127,12 @@
                         <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Waktu Kejadian</th>
                         <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Keterangan Aktivitas</th>
                         <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Status Log</th>
+                        <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    @forelse(auth()->user()->notifications()->take(10)->get() as $notification)
-                        <tr class="hover:bg-gray-50/30 transition-colors">
+                    @forelse(auth()->user()->notifications()->take(20)->get() as $notification)
+                        <tr class="hover:bg-gray-50/30 transition-colors group">
                             <td class="p-6">
                                 <span class="text-[11px] font-black text-gray-500 uppercase">{{ $notification->created_at->translatedFormat('d M Y') }}</span>
                                 <span class="block text-[10px] text-gray-400 font-medium">{{ $notification->created_at->format('H:i:s') }}</span>
@@ -141,10 +153,19 @@
                                     </div>
                                 @endif
                             </td>
+                            <td class="p-6 text-center">
+                                <form action="{{ route('admin.notifications.destroy', $notification->id) }}" method="POST" onsubmit="return confirm('Hapus log ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="w-8 h-8 rounded-lg bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100">
+                                        <span class="material-symbols-rounded text-lg">close</span>
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="p-20 text-center">
+                            <td colspan="4" class="p-20 text-center">
                                 <span class="material-symbols-rounded text-gray-200 text-6xl block mb-4">analytics</span>
                                 <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Belum ada aktivitas terekam di database</p>
                             </td>
