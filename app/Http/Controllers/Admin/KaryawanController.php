@@ -45,14 +45,13 @@ class KaryawanController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Simpan ke database
             $karyawan = Karyawan::create([
                 'nama' => $request->nama,
                 'alamat' => $request->alamat,
                 'gaji_perbulan' => $request->gaji_perbulan,
             ]);
 
-            // 2. KIRIM NOTIFIKASI
+            // Kirim Notif ke Admin
             $admin = User::where('role', 'admin')->first();
             if ($admin) {
                 $admin->notify(new DataTerbaruNotification('Karyawan baru bergabung: ' . $request->nama));
@@ -78,32 +77,40 @@ class KaryawanController extends Controller
      */
     public function absensi(Request $request)
     {
-        // PERBAIKAN: Pastikan menunjuk ke tabel 'karyawans'
+        // Validasi menunjuk langsung ke kolom id_karyawan di tabel karyawans
         $request->validate([
-            'id_karyawan' => 'required|exists:karyawans,id', 
+            'id_karyawan' => 'required|exists:karyawans,id_karyawan', 
             'status' => 'required|in:hadir,tidak',
         ], [
-            'id_karyawan.exists' => 'ID Karyawan tidak terdaftar di tabel karyawans.'
+            'id_karyawan.exists' => 'Data karyawan tidak ditemukan.'
         ]);
 
         try {
             $today = now()->toDateString();
-            $karyawan = Karyawan::find($request->id_karyawan);
             
-            // Cek di tabel absensi (Pastikan nama tabelnya 'absensi' atau 'absensis' di DB kamu)
+            // Cari karyawan menggunakan kolom id_karyawan
+            $karyawan = Karyawan::where('id_karyawan', $request->id_karyawan)->first();
+            
+            if (!$karyawan) {
+                 return redirect()->back()->with('error', 'Karyawan tidak ditemukan.');
+            }
+
+            // Cek apakah sudah absen hari ini
             $cekAbsen = DB::table('absensi')
                 ->where('id_karyawan', $request->id_karyawan)
                 ->where('tanggal', $today)
                 ->first();
 
             if ($cekAbsen) {
+                // Update menggunakan id_absensi (sesuaikan nama PK tabel absensimu)
                 DB::table('absensi')
-                    ->where('id', $cekAbsen->id)
+                    ->where('id_absensi', $cekAbsen->id_absensi) 
                     ->update([
                         'status' => $request->status,
                         'updated_at' => now()
                     ]);
             } else {
+                // Simpan data baru
                 DB::table('absensi')->insert([
                     'id_karyawan' => $request->id_karyawan,
                     'tanggal' => $today,
@@ -113,14 +120,14 @@ class KaryawanController extends Controller
                 ]);
             }
 
-            // Notif ke Admin
+            // Kirim Notif ke Admin
             $admin = User::where('role', 'admin')->first();
-            if ($admin && $karyawan) {
+            if ($admin) {
                 $statusText = $request->status == 'hadir' ? 'Hadir' : 'Tidak Hadir';
-                $admin->notify(new DataTerbaruNotification("Absensi dicatat: {$karyawan->nama} status {$statusText}"));
+                $admin->notify(new DataTerbaruNotification("Absensi: {$karyawan->nama} dicatat {$statusText}"));
             }
 
-            return back()->with('success', 'Presensi berhasil dicatat untuk tanggal ' . $today);
+            return back()->with('success', 'Presensi ' . $karyawan->nama . ' berhasil dicatat!');
 
         } catch (Exception $e) {
             return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
@@ -133,7 +140,8 @@ class KaryawanController extends Controller
     public function destroy($id)
     {
         try {
-            $karyawan = Karyawan::findOrFail($id);
+            // Karena PK bukan 'id', kita cari manual
+            $karyawan = Karyawan::where('id_karyawan', $id)->firstOrFail();
             $nama = $karyawan->nama;
             $karyawan->delete();
 
@@ -153,7 +161,7 @@ class KaryawanController extends Controller
      */
     public function info($id)
     {
-        $karyawan = Karyawan::findOrFail($id);
+        $karyawan = Karyawan::where('id_karyawan', $id)->firstOrFail();
 
         $absensi = DB::table('absensi')
                     ->where('id_karyawan', $id)
