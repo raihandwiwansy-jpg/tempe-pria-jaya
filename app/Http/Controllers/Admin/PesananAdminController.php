@@ -7,6 +7,8 @@ use App\Models\Pemesanan;
 use App\Models\User; 
 use Illuminate\Http\Request;
 use Exception;
+use App\Notifications\DataTerbaruNotification;
+use Illuminate\Support\Facades\Auth;
 
 class PesananAdminController extends Controller
 {
@@ -63,6 +65,13 @@ class PesananAdminController extends Controller
         } catch (Exception $e) {
             return redirect()->back()->withInput()->with('error', 'Gagal menambah pesanan: ' . $e->getMessage());
         }
+
+        // Kirim notifikasi ke semua reseller yang terdaftar
+        $resellers = User::where('role', 'reseller')->get();
+        foreach ($resellers as $reseller) {
+            $reseller->notify(new DataTerbaruNotification('Pesanan baru telah ditambahkan: ' . $request->nama_pemesan));
+        }
+
     }
 
     /**

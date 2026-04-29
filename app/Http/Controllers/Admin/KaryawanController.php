@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage; // Memperbaiki namespace
 use Exception; // Menambahkan import Exception
+use App\Notifications\DataTerbaruNotification;
+use Illuminate\Support\Facades\Auth;
 
 class KaryawanController extends Controller
 {
@@ -48,6 +50,13 @@ class KaryawanController extends Controller
 
         return redirect()->route('admin.karyawan.index')
                          ->with('success', 'Karyawan berhasil ditambahkan!');
+
+            // Kirim notifikasi ke semua reseller yang terdaftar
+        $resellers = User::where('role', 'reseller')->get();
+        foreach ($resellers as $reseller) {
+            $reseller->notify(new DataTerbaruNotification('Karyawan baru telah ditambahkan: ' . $request->nama));
+        }
+        
     }
 
     /**

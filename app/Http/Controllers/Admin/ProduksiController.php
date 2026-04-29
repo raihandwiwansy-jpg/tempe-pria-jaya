@@ -7,6 +7,8 @@ use App\Models\Produksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage; // Memperbaiki namespace
 use Exception; // Menambahkan import Exception
+use App\Notifications\DataTerbaruNotification;
+use Illuminate\Support\Facades\Auth;
 
 class ProduksiController extends Controller
 {
@@ -45,6 +47,12 @@ class ProduksiController extends Controller
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Gagal menyimpan data: ' . $e->getMessage());
         }
+
+            // Kirim notifikasi ke semua reseller yang terdaftar
+            $resellers = User::where('role', 'reseller')->get();
+            foreach ($resellers as $reseller) {
+                $reseller->notify(new DataTerbaruNotification('Sesi produksi baru telah dicatat: ' . $request->jumlah_produksi . ' unit pada tanggal ' . $request->tanggal));
+            }
     }
 
     /**

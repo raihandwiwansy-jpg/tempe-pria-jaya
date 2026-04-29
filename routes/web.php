@@ -13,6 +13,7 @@ use App\Http\Controllers\Reseller\SetoranController;
 use App\Http\Controllers\Admin\SetoranAdminController;
 use App\Http\Controllers\Reseller\InfoBarangController;
 use App\Http\Controllers\Admin\BarangResellerController; // SUDAH DIPERBAIKI: App\Http (Huruf Besar)
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -94,7 +95,11 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/barang-reseller', [BarangResellerController::class, 'store'])->name('barang_reseller.store');
         Route::delete('/barang-reseller/{id}', [BarangResellerController::class, 'destroy'])->name('barang_reseller.destroy');
 
-        
+        // Route untuk menandai semua notifikasi sebagai "sudah dibaca"
+        Route::get('/notifications/mark-all-read', function () {auth()->user()->unreadNotifications->markAsRead(); return redirect()->back()->with('success', 'Semua notifikasi telah dibaca.');})->name('notifications.markAllRead');
+
+         // Route untuk menandai satu notifikasi saja sebagai "sudah dibaca"
+        Route::get('/notifications/{id}/mark-read', function ($id) {$notification = auth()->user()->notifications()->findOrFail($id);$notification->markAsRead();return redirect()->back();})->name('notifications.markRead');
         
      });
 

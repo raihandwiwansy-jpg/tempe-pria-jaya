@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Barang;
 use App\Models\KatalogReseller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage; // Perbaikan namespace storage
+use Illuminate\Support\Facades\Storage;
+use App\Notifications\DataTerbaruNotification;
+use Illuminate\Support\Facades\Auth; 
 
 class BarangResellerController extends Controller
 {
@@ -61,6 +63,13 @@ class BarangResellerController extends Controller
 
         return redirect()->route('admin.barang_reseller.index')
                          ->with('success', 'Produk berhasil dipublish ke Katalog Reseller!');
+
+            // Kirim notifikasi ke semua reseller yang terdaftar
+        $resellers = User::where('role', 'reseller')->get();
+        foreach ($resellers as $reseller) {
+            $reseller->notify(new DataTerbaruNotification('Produk baru telah dipublish di katalog reseller: ' . $request->nama_display));
+        }
+        
     }
 
     /**

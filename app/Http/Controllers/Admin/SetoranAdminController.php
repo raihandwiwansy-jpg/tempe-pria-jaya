@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Exception;
+use App\Notifications\DataTerbaruNotification;
+use Illuminate\Support\Facades\Auth;
 
 class SetoranAdminController extends Controller
 {
@@ -57,6 +59,13 @@ class SetoranAdminController extends Controller
             DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+
+            // Kirim notifikasi ke reseller terkait
+            $reseller = $setoran->user; // Asumsi relasi user() sudah didefinisikan di model Setoran
+            if ($reseller) {
+                $statusText = $request->status == 'disetujui' ? 'disetujui' : 'ditolak';
+                $reseller->notify(new DataTerbaruNotification('Setoran Anda dengan ID #' . $setoran->id . ' telah ' . $statusText . '.'));
+            }
     }
 
     public function destroy($id)

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Keuangan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\DataTerbaruNotification;
+use Illuminate\Support\Facades\Auth;
 
 class KeuanganController extends Controller
 {
@@ -74,5 +76,11 @@ class KeuanganController extends Controller
                              ->withInput() // Agar data di form tidak hilang saat error
                              ->with('error', 'Gagal menyimpan transaksi: ' . $e->getMessage());
         }
+
+            // Kirim notifikasi ke semua reseller yang terdaftar
+            $resellers = User::where('role', 'reseller')->get();
+            foreach ($resellers as $reseller) {
+                $reseller->notify(new DataTerbaruNotification('Transaksi keuangan baru telah dicatat: ' . $request->jenis . ' - ' . $request->tipe . ' sebesar ' . $request->jumlah));
+            }
     }
 }

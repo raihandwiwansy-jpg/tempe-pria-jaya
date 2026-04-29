@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Exception;
+use App\Notifications\DataTerbaruNotification;
+use Illuminate\Support\Facades\Auth;
 
 class GudangController extends Controller
 {
@@ -61,6 +63,13 @@ class GudangController extends Controller
                              ->with('error', 'Error: ' . $e->getMessage())
                              ->withInput();
         }
+
+        // Kirim notifikasi ke semua reseller yang terdaftar
+        $resellers = User::where('role', 'reseller')->get();
+        foreach ($resellers as $reseller) {
+            $reseller->notify(new DataTerbaruNotification('Produk baru telah ditambahkan ke gudang: ' . $request->nama_barang));
+        }
+
     }
 
     /**

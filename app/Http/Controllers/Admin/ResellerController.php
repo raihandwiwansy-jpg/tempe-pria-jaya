@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Exception;
+use App\Notifications\DataTerbaruNotification;
+use Illuminate\Support\Facades\Auth;
 
 class ResellerController extends Controller
 {
@@ -36,6 +38,12 @@ class ResellerController extends Controller
             'password' => Hash::make($request->password),
             'role' => 'reseller', // Set otomatis sebagai reseller
         ]);
+
+        // Kirim notifikasi ke semua reseller yang terdaftar
+        $resellers = User::where('role', 'reseller')->get();
+        foreach ($resellers as $reseller) {
+            $reseller->notify(new DataTerbaruNotification('Reseller baru telah didaftarkan: ' . $request->name));
+        }
 
         return redirect()->route('admin.reseller.index')->with('success', 'Reseller berhasil didaftarkan!');
     }
