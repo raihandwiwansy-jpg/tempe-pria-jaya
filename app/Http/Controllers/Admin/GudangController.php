@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Barang;
+use App\Models\User; // <--- WAJIB TAMBAH INI
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -55,6 +56,19 @@ class GudangController extends Controller
             // 3. Simpan ke Database
             Barang::create($data);
 
+            // 4. KIRIM NOTIFIKASI (Taruh di sini sebelum return)
+            // Notif ke Admin sendiri
+            $admin = User::where('role', 'admin')->first();
+            if ($admin) {
+                $admin->notify(new DataTerbaruNotification('Barang baru terdaftar di sistem: ' . $request->nama_barang));
+            }
+
+            // Notif ke semua Reseller (Opsional, jika ingin reseller tahu ada barang baru masuk gudang)
+            $resellers = User::where('role', 'reseller')->get();
+            foreach ($resellers as $reseller) {
+                $reseller->notify(new DataTerbaruNotification('Ada stok barang baru di gudang: ' . $request->nama_barang));
+            }
+
             return redirect()->route('admin.gudang.index')
                              ->with('success', 'Barang berhasil ditambahkan!');
 
@@ -63,13 +77,6 @@ class GudangController extends Controller
                              ->with('error', 'Error: ' . $e->getMessage())
                              ->withInput();
         }
-
-        // Kirim notifikasi ke semua reseller yang terdaftar
-        $resellers = User::where('role', 'reseller')->get();
-        foreach ($resellers as $reseller) {
-            $reseller->notify(new DataTerbaruNotification('Produk baru telah ditambahkan ke gudang: ' . $request->nama_barang));
-        }
-
     }
 
     /**
@@ -89,15 +96,22 @@ class GudangController extends Controller
 
                 if ($request->tipe == 'masuk') {
                     $barang->stok_pusat += $request->jumlah;
+                    $pesan = "Stok masuk: " . $barang->nama_barang . " sebanyak " . $request->jumlah;
                 } else {
-                    // Cek agar stok tidak minus
                     if ($barang->stok_pusat < $request->jumlah) {
                         throw new Exception('Stok tidak mencukupi untuk dikurangi!');
                     }
                     $barang->stok_pusat -= $request->jumlah;
+                    $pesan = "Stok keluar: " . $barang->nama_barang . " sebanyak " . $request->jumlah;
                 }
 
                 $barang->save();
+
+                // Kirim notifikasi transaksi ke Admin
+                $admin = User::where('role', 'admin')->first();
+                if ($admin) {
+                    $admin->notify(new DataTerbaruNotification($pesan));
+                }
             });
 
             return redirect()->route('admin.gudang.index')
@@ -117,19 +131,18 @@ class GudangController extends Controller
         try {
             $barang = Barang::findOrFail($id);
             
-            // 1. Hapus foto dari storage jika ada
             if ($barang->foto) {
                 if (Storage::disk('public')->exists($barang->foto)) {
                     Storage::disk('public')->delete($barang->foto);
                 }
             }
             
-            // 2. Hapus data dari database
             $barang->delete();
             
             return redirect()->back()->with('success', 'Produk berhasil dihapus selamanya!');
 
         } catch (Exception $e) {
+            // Perbaikan typo kurung tutup di baris asli kamu
             return redirect()->back()->with('error', 'Gagal menghapus produk: ' . $e->getMessage());
         }
     }

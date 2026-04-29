@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Barang;
 use App\Models\KatalogReseller;
+use App\Models\User; // <--- WAJIB ADA INI BIAR GAK EROR
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Notifications\DataTerbaruNotification;
@@ -52,7 +53,8 @@ class BarangResellerController extends Controller
             $path = $request->file('foto')->store('produk', 'public');
         }
 
-        KatalogReseller::create([
+        // 1. Simpan Data ke Database
+        $produk = KatalogReseller::create([
             'barang_id'           => $request->barang_id,
             'nama_display'        => $request->nama_display,
             'kategori'            => $request->kategori,
@@ -61,15 +63,22 @@ class BarangResellerController extends Controller
             'foto'                => $path
         ]);
 
-        return redirect()->route('admin.barang_reseller.index')
-                         ->with('success', 'Produk berhasil dipublish ke Katalog Reseller!');
-
-            // Kirim notifikasi ke semua reseller yang terdaftar
+        // 2. KIRIM NOTIFIKASI (Harus sebelum return redirect)
+        // Kirim ke semua reseller
         $resellers = User::where('role', 'reseller')->get();
         foreach ($resellers as $reseller) {
-            $reseller->notify(new DataTerbaruNotification('Produk baru telah dipublish di katalog reseller: ' . $request->nama_display));
+            $reseller->notify(new DataTerbaruNotification('Produk baru di katalog: ' . $request->nama_display));
         }
-        
+
+        // Kirim juga ke Admin (Biar di Dashboard Admin muncul log-nya)
+        $admin = User::where('role', 'admin')->first();
+        if ($admin) {
+            $admin->notify(new DataTerbaruNotification('Berhasil publish produk: ' . $request->nama_display));
+        }
+
+        // 3. SELESAI & PINDAH HALAMAN
+        return redirect()->route('admin.barang_reseller.index')
+                         ->with('success', 'Produk berhasil dipublish ke Katalog Reseller!');
     }
 
     /**

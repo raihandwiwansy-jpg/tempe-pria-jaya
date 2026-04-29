@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Keuangan;
+use App\Models\User; // <--- WAJIB TAMBAH INI
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\DataTerbaruNotification;
@@ -31,7 +32,6 @@ class KeuanganController extends Controller
             return view('admin.keuangan.index', compact('data', 'total_kas'));
             
         } catch (\Exception $e) {
-            // Jika ada error database, munculkan pesan yang mudah dibaca
             return back()->with('error', 'Gagal memuat data: ' . $e->getMessage());
         }
     }
@@ -68,19 +68,31 @@ class KeuanganController extends Controller
                 'keterangan' => $request->keterangan,
             ]);
 
+            // 3. Persiapkan Pesan Notifikasi
+            $nominal = number_format($request->jumlah, 0, ',', '.');
+            $pesanNotif = "Transaksi Keuangan: " . strtoupper($request->jenis) . " ({$request->tipe}) sebesar Rp " . $nominal;
+
+            // 4. KIRIM NOTIFIKASI
+            // Notif ke Admin (Wajib agar log muncul di Dashboard Admin)
+            $admin = User::where('role', 'admin')->first();
+            if ($admin) {
+                $admin->notify(new DataTerbaruNotification($pesanNotif));
+            }
+
+            // Notif ke Reseller (Hanya jika kamu ingin reseller tahu ada update keuangan pusat)
+            $resellers = User::where('role', 'reseller')->get();
+            foreach ($resellers as $reseller) {
+                $reseller->notify(new DataTerbaruNotification("Update Keuangan: " . $pesanNotif));
+            }
+
+            // 5. SELESAI & PINDAH HALAMAN
             return redirect()->route('admin.keuangan.index')
                              ->with('success', 'Transaksi keuangan berhasil disimpan!');
             
         } catch (\Exception $e) {
             return redirect()->back()
-                             ->withInput() // Agar data di form tidak hilang saat error
+                             ->withInput()
                              ->with('error', 'Gagal menyimpan transaksi: ' . $e->getMessage());
         }
-
-            // Kirim notifikasi ke semua reseller yang terdaftar
-            $resellers = User::where('role', 'reseller')->get();
-            foreach ($resellers as $reseller) {
-                $reseller->notify(new DataTerbaruNotification('Transaksi keuangan baru telah dicatat: ' . $request->jenis . ' - ' . $request->tipe . ' sebesar ' . $request->jumlah));
-            }
     }
 }

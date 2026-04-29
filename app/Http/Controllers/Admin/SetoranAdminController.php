@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Setoran; // Pastikan Model Setoran sudah dibuat
+use App\Models\Setoran;
+use App\Models\User; // <--- WAJIB TAMBAH INI
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -43,35 +44,48 @@ class SetoranAdminController extends Controller
 
             $setoran = Setoran::findOrFail($id);
             
-            // Update status
+            // 1. Update status
             $setoran->status = $request->status;
             $setoran->save();
 
+            // 2. Persiapkan Notifikasi
+            $statusText = $request->status == 'disetujui' ? 'DISETUJUI' : 'DITOLAK';
+            $nominal = number_format($setoran->jumlah_setoran, 0, ',', '.');
+
+            // 3. KIRIM NOTIFIKASI KE RESELLER (Yang punya setoran)
+            $reseller = $setoran->user;
+            if ($reseller) {
+                $reseller->notify(new DataTerbaruNotification("Setoran Anda senilai Rp {$nominal} telah {$statusText}."));
+            }
+
+            // 4. KIRIM NOTIFIKASI KE ADMIN (Untuk log dashboard)
+            $admin = User::where('role', 'admin')->first();
+            if ($admin) {
+                $admin->notify(new DataTerbaruNotification("Konfirmasi Setoran: Reseller {$reseller->name} {$statusText} (Rp {$nominal})."));
+            }
+
             DB::commit();
 
-            $pesan = $request->status == 'disetujui' 
+            $pesanSuccess = $request->status == 'disetujui' 
                 ? 'Setoran berhasil dikonfirmasi dan disetujui.' 
                 : 'Setoran telah ditolak.';
 
-            return redirect()->route('admin.setoran.index')->with('success', $pesan);
+            return redirect()->route('admin.setoran.index')->with('success', $pesanSuccess);
 
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-            // Kirim notifikasi ke reseller terkait
-            $reseller = $setoran->user; // Asumsi relasi user() sudah didefinisikan di model Setoran
-            if ($reseller) {
-                $statusText = $request->status == 'disetujui' ? 'disetujui' : 'ditolak';
-                $reseller->notify(new DataTerbaruNotification('Setoran Anda dengan ID #' . $setoran->id . ' telah ' . $statusText . '.'));
-            }
     }
 
+    /**
+     * Menghapus record setoran
+     */
     public function destroy($id)
     {
         try {
             $setoran = Setoran::findOrFail($id);
+            $namaReseller = $setoran->user->name ?? 'Reseller';
 
             // Hapus file bukti pembayaran dari storage jika ada
             if ($setoran->bukti_pembayaran) {
@@ -79,6 +93,12 @@ class SetoranAdminController extends Controller
             }
 
             $setoran->delete();
+
+            // Notif ke Admin
+            $admin = User::where('role', 'admin')->first();
+            if ($admin) {
+                $admin->notify(new DataTerbaruNotification("Record setoran dari {$namaReseller} telah dihapus dari sistem."));
+            }
 
             return redirect()->back()->with('success', 'Data record setoran berhasil dihapus dari sistem.');
         } catch (Exception $e) {

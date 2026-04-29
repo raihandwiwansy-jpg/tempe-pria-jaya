@@ -51,7 +51,8 @@ class PesananAdminController extends Controller
         ]);
 
         try {
-            Pemesanan::create([
+            // 1. Simpan Pesanan
+            $pesanan = Pemesanan::create([
                 'id_reseller_assign' => $request->id_reseller_assign,
                 'nama_pemesan'       => $request->nama_pemesan,
                 'alamat_pemesan'     => $request->alamat_pemesan,
@@ -61,17 +62,24 @@ class PesananAdminController extends Controller
                 'status'             => 'pending', 
             ]);
 
+            // 2. KIRIM NOTIFIKASI
+            // Notif ke Admin (Owner)
+            $admin = User::where('role', 'admin')->first();
+            if ($admin) {
+                $admin->notify(new DataTerbaruNotification("Pesanan masuk baru: {$request->nama_pemesan} ({$request->jumlah} Pcs)"));
+            }
+
+            // Notif ke Reseller yang bersangkutan saja (Biar lebih spesifik)
+            $resellerTarget = User::find($request->id_reseller_assign);
+            if ($resellerTarget) {
+                $resellerTarget->notify(new DataTerbaruNotification("Anda mendapat tugas pesanan baru untuk: " . $request->nama_pemesan));
+            }
+
             return redirect()->route('admin.pesanan.index')->with('success', 'Pesanan baru berhasil dipublish ke sistem!');
+
         } catch (Exception $e) {
             return redirect()->back()->withInput()->with('error', 'Gagal menambah pesanan: ' . $e->getMessage());
         }
-
-        // Kirim notifikasi ke semua reseller yang terdaftar
-        $resellers = User::where('role', 'reseller')->get();
-        foreach ($resellers as $reseller) {
-            $reseller->notify(new DataTerbaruNotification('Pesanan baru telah ditambahkan: ' . $request->nama_pemesan));
-        }
-
     }
 
     /**
@@ -89,6 +97,19 @@ class PesananAdminController extends Controller
                 'status' => $request->status
             ]);
 
+            // KIRIM NOTIFIKASI PERUBAHAN STATUS
+            // Notif ke Admin
+            $admin = User::where('role', 'admin')->first();
+            if ($admin) {
+                $admin->notify(new DataTerbaruNotification("Status Pesanan #{$id} diubah menjadi: " . strtoupper($request->status)));
+            }
+
+            // Notif ke Reseller pemilik pesanan
+            $reseller = User::find($pesanan->id_reseller_assign);
+            if ($reseller) {
+                $reseller->notify(new DataTerbaruNotification("Update Pesanan: Pelanggan {$pesanan->nama_pemesan} sekarang statusnya {$request->status}"));
+            }
+
             return redirect()->back()->with('success', 'Status pesanan #' . $id . ' berhasil diperbarui!');
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Gagal update status: ' . $e->getMessage());
@@ -96,14 +117,20 @@ class PesananAdminController extends Controller
     }
 
     /**
-     * Menghapus/Membatalkan pesanan (Fitur Swipe Delete)
+     * Menghapus/Membatalkan pesanan
      */
     public function destroy($id)
     {
         try {
-            // Pastikan ID disesuaikan dengan primary key di model (id_pemesanan)
             $pesanan = Pemesanan::findOrFail($id);
+            $nama = $pesanan->nama_pemesan;
             $pesanan->delete();
+
+            // Notif Pembatalan ke Admin
+            $admin = User::where('role', 'admin')->first();
+            if ($admin) {
+                $admin->notify(new DataTerbaruNotification("Pesanan {$nama} telah dihapus/dibatalkan."));
+            }
 
             return redirect()->back()->with('success', 'Pesanan telah berhasil dibatalkan dan dihapus!');
         } catch (Exception $e) {

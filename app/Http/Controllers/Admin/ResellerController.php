@@ -32,33 +32,49 @@ class ResellerController extends Controller
             'password' => 'required|string|min:8',
         ]);
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'reseller', // Set otomatis sebagai reseller
-        ]);
+        try {
+            // 1. Simpan Reseller Baru
+            $newReseller = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'reseller', 
+            ]);
 
-        // Kirim notifikasi ke semua reseller yang terdaftar
-        $resellers = User::where('role', 'reseller')->get();
-        foreach ($resellers as $reseller) {
-            $reseller->notify(new DataTerbaruNotification('Reseller baru telah didaftarkan: ' . $request->name));
+            // 2. Persiapkan Pesan
+            $pesanNotif = "Mitra Baru Bergabung: " . $request->name . " (" . $request->email . ")";
+
+            // 3. KIRIM NOTIFIKASI
+            // Notif ke Admin (Wajib agar log muncul di Dashboard Admin)
+            $admin = User::where('role', 'admin')->first();
+            if ($admin) {
+                $admin->notify(new DataTerbaruNotification($pesanNotif));
+            }
+
+            // Notif ke Reseller yang baru daftar (Welcome Message)
+            $newReseller->notify(new DataTerbaruNotification("Selamat Datang di Sistem Tempe Pria Jaya! Akun Anda telah aktif."));
+
+            // 4. SELESAI
+            return redirect()->route('admin.reseller.index')->with('success', 'Reseller berhasil didaftarkan!');
+
+        } catch (Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Gagal mendaftarkan reseller: ' . $e->getMessage());
         }
-
-        return redirect()->route('admin.reseller.index')->with('success', 'Reseller berhasil didaftarkan!');
     }
 
     public function destroy($id)
     {
         try {
             $user = User::findOrFail($id);
+            $namaReseller = $user->name;
             
-            // Opsional: Cek jika reseller masih punya pesanan aktif sebelum dihapus
-            // if($user->pesanans()->where('status', '!=', 'selesai')->exists()) {
-            //     return redirect()->back()->with('error', 'Tidak bisa menghapus mitra yang memiliki pesanan aktif!');
-            // }
-
             $user->delete();
+
+            // Kirim notif ke Admin kalau ada mitra yang dihapus
+            $admin = User::where('role', 'admin')->first();
+            if ($admin) {
+                $admin->notify(new DataTerbaruNotification("Kemitraan dengan {$namaReseller} telah dihentikan."));
+            }
 
             return redirect()->back()->with('success', 'Kemitraan reseller telah berhasil dihentikan.');
         } catch (Exception $e) {
