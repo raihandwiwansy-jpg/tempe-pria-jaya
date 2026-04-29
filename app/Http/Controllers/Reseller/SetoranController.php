@@ -5,18 +5,18 @@ namespace App\Http\Controllers\Reseller;
 use App\Http\Controllers\Controller;
 use App\Models\Setoran;
 use App\Models\Keuangan;
-use App\Models\User; // Wajib ada untuk notif ke Admin
+use App\Models\User; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Notifications\DataTerbaruNotification; // Wajib ada
+use App\Notifications\DataTerbaruNotification;
 use Exception;
 
 class SetoranController extends Controller
 {
     /**
-     * Menampilkan daftar setoran milik reseller yang sedang login
+     * Menampilkan riwayat setoran reseller yang sedang login
      */
     public function index()
     {
@@ -28,7 +28,7 @@ class SetoranController extends Controller
     }
 
     /**
-     * Menampilkan form buat setoran baru
+     * Form tambah setoran
      */
     public function create()
     {
@@ -36,7 +36,7 @@ class SetoranController extends Controller
     }
 
     /**
-     * Menyimpan data setoran dan kirim notifikasi ke Admin
+     * Simpan data dan kirim notifikasi ke Admin
      */
     public function store(Request $request)
     {
@@ -44,18 +44,20 @@ class SetoranController extends Controller
             'jumlah_setoran' => 'required|numeric|min:1000',
             'tanggal_setoran' => 'required|date',
             'bukti_pembayaran' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+            'keterangan' => 'nullable|string|max:255',
         ]);
 
         try {
             DB::beginTransaction();
 
-            // 1. Proses Upload Bukti Pembayaran
+            // 1. Upload Bukti (Jika ada)
             $path = null;
             if ($request->hasFile('bukti_pembayaran')) {
                 $path = $request->file('bukti_pembayaran')->store('setoran', 'public');
             }
 
             // 2. Simpan ke Tabel Setoran
+            // Catatan: Pastikan kolom di database adalah 'user_id', bukan 'id_reseller'
             $setoran = Setoran::create([
                 'user_id' => Auth::id(),
                 'jumlah_setoran' => $request->jumlah_setoran,
@@ -65,70 +67,67 @@ class SetoranController extends Controller
                 'status' => 'pending'
             ]);
 
-            // 3. Simpan ke Tabel Keuangan (Record Omzet Masuk)
+            // 3. Simpan Otomatis ke Tabel Keuangan Admin
             Keuangan::create([
                 'tanggal'     => $request->tanggal_setoran,
-                'jenis'       => 'omzet',
+                'jenis'       => 'omzet', 
                 'tipe'        => 'masuk',
                 'jumlah'      => $request->jumlah_setoran,
-                'keterangan'  => 'Setoran dari Reseller: ' . Auth::user()->name . ' (' . ($request->keterangan ?? 'Tanpa keterangan') . ')',
+                'keterangan'  => 'Setoran Reseller: ' . Auth::user()->name . ' - ' . ($request->keterangan ?? 'No Ket'),
                 'sumber_type' => 'setoran_reseller',
                 'sumber_id'   => $setoran->id,
             ]);
 
             // 4. KIRIM NOTIFIKASI KE ADMIN
             $nominal = number_format($request->jumlah_setoran, 0, ',', '.');
-            $namaReseller = Auth::user()->name;
-            
-            // Cari user Admin (asumsi role adalah 'admin')
             $admin = User::where('role', 'admin')->first();
             
             if ($admin) {
                 $admin->notify(new DataTerbaruNotification(
-                    "Setoran Baru! Reseller {$namaReseller} mengirim laporan setoran sebesar Rp {$nominal}. Silakan cek dan konfirmasi."
+                    "Setoran Masuk: Rp {$nominal} dari " . Auth::user()->name
                 ));
             }
 
-            // (Opsional) Notif ke diri sendiri agar ada di log reseller
+            // 5. NOTIFIKASI KE RESELLER (Log buat reseller sendiri)
             Auth::user()->notify(new DataTerbaruNotification(
-                "Laporan setoran Rp {$nominal} berhasil dikirim. Status: Menunggu Konfirmasi."
+                "Laporan setoran Rp {$nominal} telah terkirim."
             ));
 
             DB::commit();
-            return redirect()->route('reseller.setoran.index')->with('success', 'Laporan setoran berhasil dikirim dan tercatat di Keuangan Admin!')
+            return redirect()->route('reseller.setoran.index')->with('success', 'Setoran berhasil terkirim!');
 
         } catch (\Exception $e) {
             DB::rollback();
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            // Jika masih error, hapus file yang sempat terupload
+            if ($path) { Storage::disk('public')->delete($path); }
+            
+            return redirect()->back()->withInput()->with('error', 'Gagal: ' . $e->getMessage());
         }
     }
 
     /**
-     * Menghapus laporan setoran (Hanya jika masih pending)
+     * Hapus laporan (Hanya jika belum diproses admin)
      */
     public function destroy($id)
     {
         try {
-            // Cari data pastikan milik reseller yang sedang login
             $setoran = Setoran::where('id', $id)
-                        ->where('user_id', Auth::id()) // Pastikan pakai user_id sesuai login
+                        ->where('user_id', Auth::id())
                         ->firstOrFail();
 
-            // Proteksi: Hanya boleh hapus jika status masih pending
             if ($setoran->status !== 'pending') {
-                return redirect()->back()->with('error', 'Laporan yang sudah diproses tidak dapat dihapus.');
+                return redirect()->back()->with('error', 'Data sudah diproses Admin, tidak bisa dihapus.');
             }
 
-            // Hapus file bukti fisik di storage jika ada
             if ($setoran->bukti_pembayaran) {
                 Storage::disk('public')->delete($setoran->bukti_pembayaran);
             }
 
             $setoran->delete();
+            return redirect()->back()->with('success', 'Laporan berhasil dihapus.');
 
-            return redirect()->back()->with('success', 'Laporan setoran berhasil dihapus.');
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Gagal menghapus laporan: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal hapus: ' . $e->getMessage());
         }
     }
 }
