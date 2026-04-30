@@ -24,61 +24,49 @@
         </a>
     </div>
 
-    {{-- REKAPAN ANALYTICS CARDS (NEW SECTION) --}}
+    {{-- REKAPAN ANALYTICS GRID --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[3rem] border border-white shadow-sm hover:shadow-indigo-100 transition-all group">
-            <div class="flex justify-between items-start mb-4">
-                <p class="text-[9px] font-black text-indigo-500 uppercase tracking-widest leading-none">Today's Output</p>
-                <span class="material-symbols-rounded text-indigo-200 group-hover:text-indigo-500 transition-colors">bolt</span>
-            </div>
-            <h3 class="text-3xl font-[1000] text-gray-900 tracking-tighter">{{ number_format($prodHariIni) }} <span class="text-xs font-bold text-gray-400 uppercase">Kg</span></h3>
-            <div class="mt-4 flex items-center gap-2">
-                <div class="px-2 py-1 bg-amber-50 rounded-lg border border-amber-100 flex items-center gap-1">
-                    <span class="material-symbols-rounded text-[10px] text-amber-600">nutrition</span>
-                    <span class="text-[9px] font-black text-amber-700">{{ $kedelaiHariIni }}kg</span>
-                </div>
-                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Raw Material</p>
-            </div>
-        </div>
+        
+        @php
+            $stats = [
+                ['label' => 'Today', 'data' => $statHari, 'color' => 'blue'],
+                ['label' => 'Weekly', 'data' => $statMinggu, 'color' => 'purple'],
+                ['label' => 'Monthly', 'data' => $statBulan, 'color' => 'emerald'],
+                ['label' => 'Annual', 'data' => $statTahun, 'color' => 'orange']
+            ];
+        @endphp
 
-        <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[3rem] border border-white shadow-sm">
-            <div class="flex justify-between items-start mb-4">
-                <p class="text-[9px] font-black text-purple-500 uppercase tracking-widest leading-none">Weekly Cycles</p>
-                <span class="material-symbols-rounded text-purple-200">event_repeat</span>
-            </div>
-            <h3 class="text-3xl font-[1000] text-gray-900 tracking-tighter">{{ number_format($prodMingguIni) }} <span class="text-xs font-bold text-gray-400 uppercase">Kg</span></h3>
-            <div class="w-full h-1.5 bg-purple-50 rounded-full mt-5 overflow-hidden">
-                <div class="w-2/3 h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"></div>
-            </div>
-        </div>
-
-        <div class="bg-gray-900 p-8 rounded-[3rem] shadow-2xl shadow-indigo-200 relative overflow-hidden">
+        @foreach($stats as $s)
+        <div class="bg-white/80 backdrop-blur-xl p-7 rounded-[3rem] border border-white shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
             <div class="relative z-10">
-                <p class="text-[9px] font-black text-emerald-400 uppercase tracking-widest leading-none mb-6 text-center">Monthly Resource Consumption</p>
-                <div class="flex justify-between items-center px-2">
-                    <div class="text-center">
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">Kedelai</p>
-                        <h4 class="text-xl font-[1000] text-white tracking-tighter">{{ number_format($kedelaiBulanIni) }}kg</h4>
+                <div class="flex justify-between items-center mb-6">
+                    <p class="text-[10px] font-black text-{{ $s['color'] }}-500 uppercase tracking-[0.2em]">{{ $s['label'] }} Report</p>
+                    <div class="w-8 h-8 rounded-full bg-{{ $s['color'] }}-50 flex items-center justify-center text-{{ $s['color'] }}-500">
+                        <span class="material-symbols-rounded text-sm">analytics</span>
                     </div>
-                    <div class="h-8 w-[1px] bg-gray-800"></div>
-                    <div class="text-center">
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">Plastik</p>
-                        <h4 class="text-xl font-[1000] text-white tracking-tighter">{{ number_format($plastikBulanIni) }}kg</h4>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-3xl font-[1000] text-gray-900 tracking-tighter">{{ number_format($s['data']['prod']) }}</h3>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Total Output (Kg)</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-50">
+                    <div>
+                        <p class="text-[8px] font-black text-gray-400 uppercase mb-1 tracking-tighter">Kedelai</p>
+                        <p class="text-sm font-black text-gray-700">{{ number_format($s['data']['kedelai']) }}kg</p>
+                    </div>
+                    <div>
+                        <p class="text-[8px] font-black text-gray-400 uppercase mb-1 tracking-tighter">Plastik</p>
+                        <p class="text-sm font-black text-gray-700">{{ number_format($s['data']['plastik']) }}kg</p>
                     </div>
                 </div>
             </div>
-            {{-- Decorative glow --}}
-            <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-indigo-500/20 blur-[50px] rounded-full"></div>
+            {{-- Background Accent --}}
+            <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-{{ $s['color'] }}-500/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
         </div>
+        @endforeach
 
-        <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[3rem] border border-white shadow-sm">
-            <div class="flex justify-between items-start mb-4">
-                <p class="text-[9px] font-black text-orange-500 uppercase tracking-widest leading-none">Annual Accumulation</p>
-                <span class="material-symbols-rounded text-orange-200">analytics</span>
-            </div>
-            <h3 class="text-3xl font-[1000] text-gray-900 tracking-tighter">{{ number_format($prodTahunIni) }} <span class="text-xs font-bold text-gray-400 uppercase">Kg</span></h3>
-            <p class="text-[9px] text-gray-400 font-bold mt-4 uppercase tracking-widest italic">Total unit produced in {{ now()->year }}</p>
-        </div>
     </div>
 
     {{-- Success Alert --}}
@@ -129,8 +117,6 @@
 
                             {{-- FRONT LAYER: Swipeable Content --}}
                             <div class="relative bg-white flex items-center py-8 px-10 transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] swipe-row">
-                                
-                                {{-- 1. Date Info --}}
                                 <div class="flex-1 flex items-center gap-6">
                                     <div class="w-16 h-16 rounded-[1.8rem] bg-indigo-50 flex flex-col items-center justify-center border border-indigo-100 shadow-inner group-hover:scale-110 transition-transform duration-500">
                                         <span class="text-xs font-black text-indigo-600 leading-none">{{ \Carbon\Carbon::parse($d->tanggal)->format('d') }}</span>
@@ -145,7 +131,6 @@
                                     </div>
                                 </div>
 
-                                {{-- 2. Output --}}
                                 <div class="flex-1 flex justify-center">
                                     <div class="relative inline-block">
                                         <span class="text-4xl font-[1000] text-gray-900 tracking-tighter leading-none">{{ $d->jumlah_produksi }}</span>
@@ -153,7 +138,6 @@
                                     </div>
                                 </div>
 
-                                {{-- 3. Raw Materials (Resources) --}}
                                 <div class="flex-1 hidden md:flex flex-col gap-2 items-center justify-center px-10">
                                     <div class="flex items-center gap-4">
                                         <div class="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-100">
@@ -167,7 +151,6 @@
                                     </div>
                                 </div>
 
-                                {{-- 4. Hint/Aksi --}}
                                 <div class="flex items-center gap-4">
                                     <div class="md:hidden text-gray-200 animate-pulse">
                                         <span class="material-symbols-rounded">swipe_left</span>
@@ -187,7 +170,6 @@
                                     <span class="material-symbols-rounded text-6xl text-gray-200">precision_manufacturing</span>
                                 </div>
                                 <h3 class="text-2xl font-[1000] text-gray-300 uppercase tracking-widest">No Production Data</h3>
-                                <p class="text-gray-400 text-sm mt-3 font-medium">Sistem belum mendeteksi aktivitas produksi baru.</p>
                             </div>
                         </td>
                     </tr>
@@ -196,11 +178,6 @@
             </table>
         </div>
     </div>
-
-    <div class="mt-12 flex items-center justify-center gap-4 bg-indigo-50/50 py-4 px-8 rounded-[2rem] border border-indigo-100/50 w-fit mx-auto shadow-sm">
-        <span class="material-symbols-rounded text-indigo-500 text-sm">info</span>
-        <p class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">Data synced with central warehouse stock</p>
-    </div>
 </div>
 
 <style>
@@ -208,12 +185,9 @@
     body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .swipe-row { cursor: grab; user-select: none; }
-    .swipe-row:active { cursor: grabbing; }
-
     @keyframes bounceIn {
         0% { opacity: 0; transform: scale(0.3) translateY(-100px); }
         50% { opacity: 1; transform: scale(1.05) translateY(10px); }
-        70% { transform: scale(0.9) translateY(-5px); }
         100% { transform: scale(1) translateY(0); }
     }
     .animate-bounce-in { animation: bounceIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
@@ -221,57 +195,35 @@
 
 <script>
     document.querySelectorAll('.swipe-row').forEach(row => {
-        let startX = 0;
-        let currentX = 0;
-        let isDragging = false;
-        const maxSlide = -120;
-        const snapPoint = -60;
+        let startX = 0, currentX = 0, isDragging = false;
+        const maxSlide = -120, snapPoint = -60;
 
-        row.addEventListener('touchstart', e => {
-            startX = e.touches[0].clientX - currentX;
+        const start = (e) => {
+            startX = (e.touches ? e.touches[0].clientX : e.clientX) - currentX;
             row.style.transition = 'none';
             isDragging = true;
-        });
-
-        row.addEventListener('touchmove', e => {
+        };
+        const move = (e) => {
             if (!isDragging) return;
-            let x = e.touches[0].clientX - startX;
+            let x = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
             if (x <= 0 && x >= maxSlide - 30) {
                 currentX = x;
                 row.style.transform = `translateX(${x}px)`;
             }
-        });
-
-        row.addEventListener('touchend', () => {
+        };
+        const end = () => {
             isDragging = false;
             row.style.transition = 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1.2)';
             currentX = currentX < snapPoint ? maxSlide : 0;
             row.style.transform = `translateX(${currentX}px)`;
-        });
+        };
 
-        // Mouse Support
-        row.addEventListener('mousedown', e => {
-            startX = e.clientX - currentX;
-            row.style.transition = 'none';
-            isDragging = true;
-        });
-
-        window.addEventListener('mousemove', e => {
-            if (!isDragging) return;
-            let x = e.clientX - startX;
-            if (x <= 0 && x >= maxSlide - 30) {
-                currentX = x;
-                row.style.transform = `translateX(${x}px)`;
-            }
-        });
-
-        window.addEventListener('mouseup', () => {
-            if (!isDragging) return;
-            isDragging = false;
-            row.style.transition = 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1.2)';
-            currentX = currentX < snapPoint ? maxSlide : 0;
-            row.style.transform = `translateX(${currentX}px)`;
-        });
+        row.addEventListener('touchstart', start);
+        row.addEventListener('touchmove', move);
+        row.addEventListener('touchend', end);
+        row.addEventListener('mousedown', start);
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', end);
     });
 </script>
 @endsection
