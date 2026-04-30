@@ -14,7 +14,7 @@ use App\Http\Controllers\Admin\SetoranAdminController;
 use App\Http\Controllers\Reseller\InfoBarangController;
 use App\Http\Controllers\Admin\BarangResellerController; // SUDAH DIPERBAIKI: App\Http (Huruf Besar)
 use App\Http\Controllers\Admin\NotificationController;
-use App\Controllers\Admin\ProduksiJadiController;
+use App\Http\Controllers\Admin\ProduksiJadiController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
