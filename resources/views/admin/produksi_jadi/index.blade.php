@@ -126,7 +126,8 @@
 
                         {{-- Action --}}
                         <td class="px-10 py-8 text-right">
-                            <form action="{{ route('admin.produksi-jadi.destroy', $d->id) }}" method="POST" onsubmit="return confirm('Hapus data ini?')">
+                            {{-- PERBAIKAN: Menggunakan nama route dengan underscore --}}
+                            <form action="{{ route('admin.produksi_jadi.destroy', $d->id) }}" method="POST" onsubmit="return confirm('Hapus data ini?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="w-10 h-10 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all duration-300">
                                     <span class="material-symbols-rounded text-xl">delete</span>
@@ -163,7 +164,8 @@
                 <span class="material-symbols-rounded absolute -right-4 -bottom-4 text-8xl text-emerald-500/30">task_alt</span>
             </div>
 
-            <form action="{{ route('admin.produksi-jadi.store') }}" method="POST" class="p-8 space-y-6">
+            {{-- PERBAIKAN: Menggunakan nama route dengan underscore --}}
+            <form action="{{ route('admin.produksi_jadi.store') }}" method="POST" class="p-8 space-y-6">
                 @csrf
                 <div>
                     <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Tanggal Produksi</label>
