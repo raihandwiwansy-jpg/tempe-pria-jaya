@@ -24,6 +24,63 @@
         </a>
     </div>
 
+    {{-- REKAPAN ANALYTICS CARDS (NEW SECTION) --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[3rem] border border-white shadow-sm hover:shadow-indigo-100 transition-all group">
+            <div class="flex justify-between items-start mb-4">
+                <p class="text-[9px] font-black text-indigo-500 uppercase tracking-widest leading-none">Today's Output</p>
+                <span class="material-symbols-rounded text-indigo-200 group-hover:text-indigo-500 transition-colors">bolt</span>
+            </div>
+            <h3 class="text-3xl font-[1000] text-gray-900 tracking-tighter">{{ number_format($prodHariIni) }} <span class="text-xs font-bold text-gray-400 uppercase">Kg</span></h3>
+            <div class="mt-4 flex items-center gap-2">
+                <div class="px-2 py-1 bg-amber-50 rounded-lg border border-amber-100 flex items-center gap-1">
+                    <span class="material-symbols-rounded text-[10px] text-amber-600">nutrition</span>
+                    <span class="text-[9px] font-black text-amber-700">{{ $kedelaiHariIni }}kg</span>
+                </div>
+                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Raw Material</p>
+            </div>
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[3rem] border border-white shadow-sm">
+            <div class="flex justify-between items-start mb-4">
+                <p class="text-[9px] font-black text-purple-500 uppercase tracking-widest leading-none">Weekly Cycles</p>
+                <span class="material-symbols-rounded text-purple-200">event_repeat</span>
+            </div>
+            <h3 class="text-3xl font-[1000] text-gray-900 tracking-tighter">{{ number_format($prodMingguIni) }} <span class="text-xs font-bold text-gray-400 uppercase">Kg</span></h3>
+            <div class="w-full h-1.5 bg-purple-50 rounded-full mt-5 overflow-hidden">
+                <div class="w-2/3 h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"></div>
+            </div>
+        </div>
+
+        <div class="bg-gray-900 p-8 rounded-[3rem] shadow-2xl shadow-indigo-200 relative overflow-hidden">
+            <div class="relative z-10">
+                <p class="text-[9px] font-black text-emerald-400 uppercase tracking-widest leading-none mb-6 text-center">Monthly Resource Consumption</p>
+                <div class="flex justify-between items-center px-2">
+                    <div class="text-center">
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">Kedelai</p>
+                        <h4 class="text-xl font-[1000] text-white tracking-tighter">{{ number_format($kedelaiBulanIni) }}kg</h4>
+                    </div>
+                    <div class="h-8 w-[1px] bg-gray-800"></div>
+                    <div class="text-center">
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">Plastik</p>
+                        <h4 class="text-xl font-[1000] text-white tracking-tighter">{{ number_format($plastikBulanIni) }}kg</h4>
+                    </div>
+                </div>
+            </div>
+            {{-- Decorative glow --}}
+            <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-indigo-500/20 blur-[50px] rounded-full"></div>
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[3rem] border border-white shadow-sm">
+            <div class="flex justify-between items-start mb-4">
+                <p class="text-[9px] font-black text-orange-500 uppercase tracking-widest leading-none">Annual Accumulation</p>
+                <span class="material-symbols-rounded text-orange-200">analytics</span>
+            </div>
+            <h3 class="text-3xl font-[1000] text-gray-900 tracking-tighter">{{ number_format($prodTahunIni) }} <span class="text-xs font-bold text-gray-400 uppercase">Kg</span></h3>
+            <p class="text-[9px] text-gray-400 font-bold mt-4 uppercase tracking-widest italic">Total unit produced in {{ now()->year }}</p>
+        </div>
+    </div>
+
     {{-- Success Alert --}}
     @if(session('success'))
     <div class="fixed top-10 right-10 z-[100] animate-bounce-in">
@@ -56,7 +113,7 @@
                 </thead>
 
                 <tbody class="divide-y divide-gray-50">
-                    @foreach($data as $d)
+                    @forelse($data as $d)
                     <tr class="group relative overflow-hidden bg-white hover:bg-indigo-50/20 transition-all duration-500">
                         <td colspan="4" class="p-0 relative">
                             {{-- BACK LAYER: Danger Action --}}
@@ -83,7 +140,7 @@
                                         <h4 class="font-black text-gray-800 text-lg tracking-tight">{{ \Carbon\Carbon::parse($d->tanggal)->format('l') }}</h4>
                                         <div class="flex items-center gap-2 mt-1">
                                             <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Logged: {{ \Carbon\Carbon::parse($d->created_at)->diffForHumans() }}</p>
+                                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Logged: {{ $d->created_at->diffForHumans() }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -122,9 +179,7 @@
                             </div>
                         </td>
                     </tr>
-                    @endforeach
-
-                    @if($data->isEmpty())
+                    @empty
                     <tr>
                         <td colspan="4" class="py-32 text-center bg-white">
                             <div class="flex flex-col items-center">
@@ -136,7 +191,7 @@
                             </div>
                         </td>
                     </tr>
-                    @endif
+                    @endforelse
                 </tbody>
             </table>
         </div>

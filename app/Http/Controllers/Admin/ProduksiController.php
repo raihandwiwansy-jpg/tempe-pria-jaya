@@ -4,22 +4,56 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Produksi;
-use App\Models\User; // <--- WAJIB TAMBAH INI BIAR GAK ERROR
+use App\Models\User; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Exception;
 use App\Notifications\DataTerbaruNotification;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class ProduksiController extends Controller
 {
     /**
-     * Menampilkan riwayat produksi
+     * Menampilkan riwayat produksi dengan rekapan
      */
     public function index()
     {
-        $data = Produksi::latest()->get();
-        return view('admin.produksi.index', compact('data'));
+        try {
+            $data = Produksi::latest()->get();
+
+            // 1. Rekapan Harian
+            $hariIni = Produksi::whereDate('tanggal', Carbon::today());
+            $prodHariIni = $hariIni->sum('jumlah_produksi');
+            $kedelaiHariIni = $hariIni->sum('kedelai_kg');
+
+            // 2. Rekapan Minggu Ini
+            $mingguIni = Produksi::whereBetween('tanggal', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+            $prodMingguIni = $mingguIni->sum('jumlah_produksi');
+
+            // 3. Rekapan Bulan Ini
+            $bulanIni = Produksi::whereMonth('tanggal', Carbon::now()->month)
+                                ->whereYear('tanggal', Carbon::now()->year);
+            $prodBulanIni = $bulanIni->sum('jumlah_produksi');
+            $kedelaiBulanIni = $bulanIni->sum('kedelai_kg');
+            $plastikBulanIni = $bulanIni->sum('plastik_kg');
+
+            // 4. Rekapan Tahun Ini
+            $prodTahunIni = Produksi::whereYear('tanggal', Carbon::now()->year)->sum('jumlah_produksi');
+
+            return view('admin.produksi.index', compact(
+                'data', 
+                'prodHariIni', 
+                'kedelaiHariIni', 
+                'prodMingguIni', 
+                'prodBulanIni', 
+                'kedelaiBulanIni', 
+                'plastikBulanIni', 
+                'prodTahunIni'
+            ));
+        } catch (Exception $e) {
+            return back()->with('error', 'Gagal memuat data produksi: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -50,20 +84,17 @@ class ProduksiController extends Controller
             $pesan = "Produksi Baru: {$request->jumlah_produksi} unit (Kedelai: {$request->kedelai_kg}kg, Plastik: {$request->plastik_kg}kg)";
 
             // 3. KIRIM NOTIFIKASI
-            // Notif ke Admin (Agar log muncul di dashboard)
             $admin = User::where('role', 'admin')->first();
             if ($admin) {
                 $admin->notify(new DataTerbaruNotification($pesan));
             }
 
-            // Notif ke semua Reseller (Agar mereka tahu stok bakal bertambah)
             $resellers = User::where('role', 'reseller')->get();
             foreach ($resellers as $reseller) {
-                $reseller->notify(new DataTerbaruNotification("Info Produksi: Stok baru sedang diproses sebanyak {$request->jumlah_produksi} unit."));
+                $reseller->notify(new DataTerbaruNotification("Info Produksi: Stok baru diproses {$request->jumlah_produksi} unit."));
             }
 
-            // 4. SELESAI & REDIRECT
-            return redirect('/admin/produksi')->with('success', 'Sesi produksi berhasil dicatat dalam sistem!');
+            return redirect('/admin/produksi')->with('success', 'Sesi produksi berhasil dicatat!');
 
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Gagal menyimpan data: ' . $e->getMessage());
@@ -71,33 +102,30 @@ class ProduksiController extends Controller
     }
 
     /**
-     * Hapus data produksi (Swipe Delete)
+     * Hapus data produksi
      */
     public function destroy($id)
     {
         try {
             $produksi = Produksi::findOrFail($id);
             
-            // 1. Hapus foto dari storage jika ada
             if ($produksi->foto) {
                 if (Storage::disk('public')->exists($produksi->foto)) {
                     Storage::disk('public')->delete($produksi->foto);
                 }
             }
             
-            // 2. Hapus data dari database
             $produksi->delete();
             
-            // Notif ke Admin kalau ada data yang dihapus
             $admin = User::where('role', 'admin')->first();
             if ($admin) {
                 $admin->notify(new DataTerbaruNotification("Data produksi tanggal {$produksi->tanggal} telah dihapus."));
             }
             
-            return redirect()->back()->with('success', 'Data produksi berhasil dimusnahkan!');
+            return redirect()->back()->with('success', 'Data produksi berhasil dihapus!');
 
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Sistem gagal menghapus data: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }
 }
