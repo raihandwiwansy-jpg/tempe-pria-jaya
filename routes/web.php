@@ -35,6 +35,7 @@ Route::get('/dashboard', function () {
         : redirect()->route('reseller.dashboard');
 })->middleware(['auth'])->name('dashboard');
 
+
 // ================= GRUP ADMIN =================
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
