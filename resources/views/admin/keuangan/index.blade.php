@@ -16,7 +16,7 @@
         </div>
         
         <div class="flex flex-wrap items-center gap-4">
-            {{-- Summary Card --}}
+            {{-- Summary Card (Total Kas) --}}
             <div class="bg-white/80 backdrop-blur-md px-8 py-5 rounded-[2rem] border border-white shadow-[0_20px_50px_rgba(0,0,0,0.04)] flex items-center gap-6">
                 <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600">
                     <span class="material-symbols-rounded text-3xl">account_balance_wallet</span>
@@ -31,6 +31,47 @@
                 <span class="material-symbols-rounded group-hover:rotate-90 transition-transform">add_circle</span>
                 New Record
             </a>
+        </div>
+    </div>
+
+    {{-- REKAPAN STATISTICS SECTION (NEW) --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
+        <div class="bg-white/60 backdrop-blur-sm p-6 rounded-[2.5rem] border border-white shadow-sm">
+            <p class="text-[8px] font-black text-blue-500 uppercase tracking-[0.3em] mb-2">Today's In</p>
+            <h4 class="text-xl font-black text-gray-800 tracking-tighter">Rp {{ number_format($hariIni, 0, ',', '.') }}</h4>
+            <div class="w-full h-1 bg-blue-100 rounded-full mt-3 overflow-hidden">
+                <div class="w-1/2 h-full bg-blue-500"></div>
+            </div>
+        </div>
+
+        <div class="bg-white/60 backdrop-blur-sm p-6 rounded-[2.5rem] border border-white shadow-sm">
+            <p class="text-[8px] font-black text-purple-500 uppercase tracking-[0.3em] mb-2">Weekly In</p>
+            <h4 class="text-xl font-black text-gray-800 tracking-tighter">Rp {{ number_format($mingguIni, 0, ',', '.') }}</h4>
+            <div class="w-full h-1 bg-purple-100 rounded-full mt-3 overflow-hidden">
+                <div class="w-2/3 h-full bg-purple-500"></div>
+            </div>
+        </div>
+
+        <div class="bg-white/60 backdrop-blur-sm p-6 rounded-[2.5rem] border border-white shadow-sm">
+            <p class="text-[8px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-2">Monthly In</p>
+            <h4 class="text-xl font-black text-gray-800 tracking-tighter">Rp {{ number_format($bulanIni, 0, ',', '.') }}</h4>
+            <div class="w-full h-1 bg-emerald-100 rounded-full mt-3 overflow-hidden">
+                <div class="w-3/4 h-full bg-emerald-500"></div>
+            </div>
+        </div>
+
+        <div class="bg-white/60 backdrop-blur-sm p-6 rounded-[2.5rem] border border-white shadow-sm">
+            <p class="text-[8px] font-black text-orange-500 uppercase tracking-[0.3em] mb-2">Annual In</p>
+            <h4 class="text-xl font-black text-gray-800 tracking-tighter">Rp {{ number_format($tahunIni, 0, ',', '.') }}</h4>
+            <div class="w-full h-1 bg-orange-100 rounded-full mt-3 overflow-hidden">
+                <div class="w-full h-full bg-orange-500"></div>
+            </div>
+        </div>
+
+        <div class="bg-gray-900 p-6 rounded-[2.5rem] shadow-xl shadow-gray-200">
+            <p class="text-[8px] font-black text-green-400 uppercase tracking-[0.3em] mb-2">Net Profit (MTD)</p>
+            <h4 class="text-xl font-black text-white tracking-tighter">Rp {{ number_format($pemasukanBersihBulanIni, 0, ',', '.') }}</h4>
+            <p class="text-[8px] text-gray-500 font-bold mt-2 italic">After expenses</p>
         </div>
     </div>
 
@@ -79,8 +120,8 @@
                                     <div class="flex items-center gap-2 text-red-500">
                                         <div class="w-2 h-2 rounded-full bg-red-500"></div>
                                         <span class="text-[10px] font-black uppercase tracking-widest bg-red-50 px-3 py-1 rounded-lg border border-red-100/50">Debit Out</span>
-                                    @endif
-                                </div>
+                                    </div>
+                                @endif
                                 <p class="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] ml-4">
                                     Source: <span class="text-gray-600">{{ strtoupper($item->jenis) }}</span>
                                 </p>
