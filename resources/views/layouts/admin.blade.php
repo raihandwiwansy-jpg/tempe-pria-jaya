@@ -46,6 +46,30 @@
             color: #fbbf24 !important;
         }
 
+        .sub-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 1rem 0.6rem 2.8rem;
+            border-radius: 0.85rem;
+            transition: all 0.3s;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 0.125rem;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .sub-nav-item:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .sub-nav-active {
+            color: #fbbf24 !important;
+        }
+
         .glass-header {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(15px);
@@ -95,10 +119,24 @@
                     <span class="material-symbols-rounded text-xl">inventory_2</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Stok Gudang</span>
                 </a>
-                <a href="/admin/produksi" class="nav-item {{ request()->is('admin/produksi*') ? 'nav-active' : '' }}">
-                    <span class="material-symbols-rounded text-xl">factory</span>
-                    <span class="text-[10px] font-black uppercase tracking-widest">Produksi</span>
-                </a>
+                
+                {{-- Dropdown Produksi --}}
+                <div class="space-y-1">
+                    <div class="nav-item {{ request()->is('admin/produksi*') || request()->is('admin/produksi_jadi*') ? 'text-white bg-white/5' : '' }}">
+                        <span class="material-symbols-rounded text-xl">factory</span>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Produksi</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <a href="/admin/produksi" class="sub-nav-item {{ request()->is('admin/produksi') ? 'sub-nav-active' : '' }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ request()->is('admin/produksi') ? 'bg-yellow-400' : 'bg-white/20' }}"></span>
+                            Bahan Baku
+                        </a>
+                        <a href="/admin/produksi_jadi" class="sub-nav-item {{ request()->is('admin/produksi_jadi*') ? 'sub-nav-active' : '' }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ request()->is('admin/produksi_jadi*') ? 'bg-yellow-400' : 'bg-white/20' }}"></span>
+                            Bahan Jadi
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <div class="mb-6">
@@ -131,7 +169,6 @@
                     <span class="material-symbols-rounded text-xl">badge</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Karyawan</span>
                 </a>
-                
             </div>
         </nav>
 
