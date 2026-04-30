@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\SetoranAdminController;
 use App\Http\Controllers\Reseller\InfoBarangController;
 use App\Http\Controllers\Admin\BarangResellerController; // SUDAH DIPERBAIKI: App\Http (Huruf Besar)
 use App\Http\Controllers\Admin\NotificationController;
+use App\Controllers\Admin\ProduksiJadiController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -105,6 +106,12 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
         Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
         Route::delete('/notifications-clear', [NotificationController::class, 'clearAll'])->name('notifications.clearAll');
+
+        // PRODUKSI JADI
+        Route::get('/produksi-jadi', [ProduksiJadiController::class, 'index'])->name('produksi_jadi.index');
+        Route::post('/produksi-jadi', [ProduksiJadiController::class, 'store'])->name('produksi_jadi.store');
+        Route::delete('/produksi-jadi/{id}', [ProduksiJadiController::class, 'destroy'])->name('produksi_jadi.destroy');
+
     });
     
 
