@@ -71,7 +71,7 @@ class ProduksiJadiController extends Controller
                 $reseller->notify(new DataTerbaruNotification("Kabar Gembira! Stok tempe baru sudah tersedia. Silahkan cek menu order."));
             }
 
-            return redirect()->route('admin.produksi-jadi.index')->with('success', 'Produksi barang jadi berhasil dicatat!');
+            return redirect()->route('admin.produksi_jadi.index')->with('success', 'Produksi barang jadi berhasil dicatat!');
 
         } catch (Exception $e) {
             return back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());

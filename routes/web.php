@@ -109,10 +109,13 @@ Route::middleware(['auth', 'role:admin'])
         Route::delete('/notifications-clear', [NotificationController::class, 'clearAll'])->name('notifications.clearAll');
 
         // PRODUKSI JADI
-        Route::resource('produksi_jadi', ProduksiJadiController::class)->only(['index', 'create', 'store', 'destroy']);
-        Route::get('/produksi-jadi', [ProduksiJadiController::class, 'index'])->name('produksi_jadi.index');
-        Route::post('/produksi-jadi', [ProduksiJadiController::class, 'store'])->name('produksi_jadi.store');
-        Route::delete('/produksi-jadi/{id}', [ProduksiJadiController::class, 'destroy'])->name('produksi_jadi.destroy');
+        Route::resource('produksi_jadi', App\Http\Controllers\Admin\ProduksiJadiController::class)
+        ->names([
+        'index'   => 'admin.produksi_jadi.index',
+        'store'   => 'admin.produksi_jadi.store',
+        'destroy' => 'admin.produksi_jadi.destroy',
+         ])
+        ->only(['index', 'store', 'destroy']);
 
     });
     
