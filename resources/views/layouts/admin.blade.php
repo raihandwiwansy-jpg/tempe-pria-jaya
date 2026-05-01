@@ -46,30 +46,6 @@
             color: #fbbf24 !important;
         }
 
-        .sub-nav-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.6rem 1rem 0.6rem 2.8rem;
-            border-radius: 0.85rem;
-            transition: all 0.3s;
-            color: rgba(255, 255, 255, 0.4);
-            margin-bottom: 0.125rem;
-            font-size: 9px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .sub-nav-item:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .sub-nav-active {
-            color: #fbbf24 !important;
-        }
-
         .glass-header {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(15px);
@@ -111,32 +87,27 @@
         <nav class="flex-1 px-4 overflow-y-auto pb-6 custom-scrollbar">
             <div class="mb-6">
                 <p class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] px-4 mb-2">Core Analytics</p>
-                <a href="/admin/dashboard" class="nav-item {{ request()->is('admin/dashboard') ? 'nav-active' : '' }}">
+                
+                <a href="{{ url('/admin/dashboard') }}" class="nav-item {{ request()->is('admin/dashboard') ? 'nav-active' : '' }}">
                     <span class="material-symbols-rounded text-xl">dashboard</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Dashboard</span>
                 </a>
-                <a href="/admin/gudang" class="nav-item {{ request()->is('admin/gudang*') ? 'nav-active' : '' }}">
+
+                <a href="{{ url('/admin/gudang') }}" class="nav-item {{ request()->is('admin/gudang*') ? 'nav-active' : '' }}">
                     <span class="material-symbols-rounded text-xl">inventory_2</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Stok Gudang</span>
                 </a>
                 
-                {{-- Dropdown Produksi --}}
-                <div class="space-y-1">
-                    <div class="nav-item {{ request()->is('admin/produksi*') || request()->is('admin/produksi_jadi*') ? 'text-white bg-white/5' : '' }}">
-                        <span class="material-symbols-rounded text-xl">factory</span>
-                        <span class="text-[10px] font-black uppercase tracking-widest">Produksi</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <a href="/admin/produksi" class="sub-nav-item {{ request()->is('admin/produksi') ? 'sub-nav-active' : '' }}">
-                            <span class="w-1.5 h-1.5 rounded-full {{ request()->is('admin/produksi') ? 'bg-yellow-400' : 'bg-white/20' }}"></span>
-                            Bahan Baku
-                        </a>
-                        <a href="/admin/produksi_jadi" class="sub-nav-item {{ request()->is('admin/produksi_jadi*') ? 'sub-nav-active' : '' }}">
-                            <span class="w-1.5 h-1.5 rounded-full {{ request()->is('admin/produksi_jadi*') ? 'bg-yellow-400' : 'bg-white/20' }}"></span>
-                            Bahan Jadi
-                        </a>
-                    </div>
-                </div>
+                {{-- MENU PRODUKSI (DIPISAH SUPAYA TIDAK MENTAL) --}}
+                <a href="{{ url('/admin/produksi') }}" class="nav-item {{ request()->is('admin/produksi') ? 'nav-active' : '' }}">
+                    <span class="material-symbols-rounded text-xl">rebase_edit</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Bahan Baku</span>
+                </a>
+
+                <a href="{{ url('/admin/produksi_jadi') }}" class="nav-item {{ request()->is('admin/produksi_jadi*') ? 'nav-active' : '' }}">
+                    <span class="material-symbols-rounded text-xl">inventory</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Produksi Jadi</span>
+                </a>
             </div>
 
             <div class="mb-6">
@@ -145,15 +116,15 @@
                     <span class="material-symbols-rounded text-xl">storefront</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Katalog</span>
                 </a>
-                <a href="/admin/pesanan" class="nav-item {{ request()->is('admin/pesanan*') ? 'nav-active' : '' }}">
+                <a href="{{ url('/admin/pesanan') }}" class="nav-item {{ request()->is('admin/pesanan*') ? 'nav-active' : '' }}">
                     <span class="material-symbols-rounded text-xl">shopping_cart</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Pesanan Masuk</span>
                 </a>
-                <a href="/admin/reseller" class="nav-item {{ request()->is('admin/reseller*') ? 'nav-active' : '' }}">
+                <a href="{{ url('/admin/reseller') }}" class="nav-item {{ request()->is('admin/reseller*') ? 'nav-active' : '' }}">
                     <span class="material-symbols-rounded text-xl">group</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Data Reseller</span>
                 </a>
-                <a href="/admin/setoran" class="nav-item {{ request()->is('admin/setoran*') ? 'nav-active' : '' }}">
+                <a href="{{ url('/admin/setoran') }}" class="nav-item {{ request()->is('admin/setoran*') ? 'nav-active' : '' }}">
                     <span class="material-symbols-rounded text-xl">paid</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Setoran</span>
                 </a>
@@ -161,11 +132,11 @@
 
             <div class="mb-6">
                 <p class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] px-4 mb-2">Finance & HR</p>
-                <a href="/admin/keuangan" class="nav-item {{ request()->is('admin/keuangan*') ? 'nav-active' : '' }}">
+                <a href="{{ url('/admin/keuangan') }}" class="nav-item {{ request()->is('admin/keuangan*') ? 'nav-active' : '' }}">
                     <span class="material-symbols-rounded text-xl">payments</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Laporan Keuangan</span>
                 </a>
-                <a href="/admin/karyawan" class="nav-item {{ request()->is('admin/karyawan*') ? 'nav-active' : '' }}">
+                <a href="{{ url('/admin/karyawan') }}" class="nav-item {{ request()->is('admin/karyawan*') ? 'nav-active' : '' }}">
                     <span class="material-symbols-rounded text-xl">badge</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Karyawan</span>
                 </a>
@@ -175,10 +146,10 @@
         <div class="p-6 border-t border-white/5 flex-shrink-0 bg-black/10">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center font-black text-green-900 flex-shrink-0">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                    {{ auth()->check() ? strtoupper(substr(auth()->user()->name, 0, 1)) : '?' }}
                 </div>
                 <div class="min-w-0">
-                    <p class="text-[11px] font-black truncate">{{ auth()->user()->name }}</p>
+                    <p class="text-[11px] font-black truncate">{{ auth()->user()->name ?? 'User' }}</p>
                     <p class="text-[9px] font-bold text-green-400 uppercase tracking-tighter">Super Admin</p>
                 </div>
             </div>
