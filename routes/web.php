@@ -12,10 +12,9 @@ use App\Http\Controllers\Reseller\PesananController;
 use App\Http\Controllers\Reseller\SetoranController;
 use App\Http\Controllers\Admin\SetoranAdminController;
 use App\Http\Controllers\Reseller\InfoBarangController;
-use App\Http\Controllers\Admin\BarangResellerController; // SUDAH DIPERBAIKI: App\Http (Huruf Besar)
+use App\Http\Controllers\Admin\BarangResellerController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ProduksiJadiController;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -29,7 +28,6 @@ Route::get('/dashboard', function () {
     $user = Auth::user();
     if (!$user) return redirect('/login');
     
-    // Redirect berdasarkan role ke Route Name yang benar
     return ($user->role === 'admin') 
         ? redirect()->route('admin.dashboard') 
         : redirect()->route('reseller.dashboard');
@@ -39,86 +37,60 @@ Route::get('/dashboard', function () {
 // ================= GRUP ADMIN =================
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
-    ->name('admin.')
+    ->name('admin.') // Semua nama route di sini otomatis diawali 'admin.'
     ->group(function () {
 
-        // Dashboard Admin (Lewat Controller agar data pesanan reseller muncul)
+        // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // GUDANG
-        Route::get('/gudang', [GudangController::class, 'index'])->name('gudang.index');
-        Route::get('/gudang/create', [GudangController::class, 'create'])->name('gudang.create');
-        Route::post('/gudang/store', [GudangController::class, 'store'])->name('gudang.store');
-        Route::post('/gudang/transaksi', [GudangController::class, 'transaksi'])->name('gudang.transaksi');
-        Route::delete('/gudang/{id}', [GudangController::class, 'destroy'])->name('gudang.destroy');
+        Route::controller(GudangController::class)->group(function () {
+            Route::get('/gudang', 'index')->name('gudang.index');
+            Route::get('/gudang/create', 'create')->name('gudang.create');
+            Route::post('/gudang/store', 'store')->name('gudang.store');
+            Route::post('/gudang/transaksi', 'transaksi')->name('gudang.transaksi');
+            Route::delete('/gudang/{id}', 'destroy')->name('gudang.destroy');
+        });
 
-        // PRODUKSI
-        Route::get('/produksi', [ProduksiController::class, 'index'])->name('produksi.index');
-        Route::get('/produksi/create', [ProduksiController::class, 'create'])->name('produksi.create');
-        Route::post('/produksi/store', [ProduksiController::class, 'store'])->name('produksi.store');
-        Route::delete('/produksi/{id}', [ProduksiController::class, 'destroy'])->name('produksi.destroy');
+        // PRODUKSI (BAHAN BAKU)
+        Route::resource('produksi', ProduksiController::class)->except(['show', 'edit', 'update']);
 
+        // PRODUKSI JADI (SULUSI MENTAL: Menggunakan URL Unik)
+        // Kita pakai nama resource 'produksi-jadi' tapi name tetap 'produksi_jadi' agar sinkron dengan view
+        Route::resource('produksi-jadi', ProduksiJadiController::class)
+            ->names('produksi_jadi') 
+            ->only(['index', 'store', 'destroy']);
 
         // KARYAWAN
-        Route::get('/karyawan', [KaryawanController::class, 'index'])->name('karyawan.index');
-        Route::get('/karyawan/create', [KaryawanController::class, 'create'])->name('karyawan.create');
-        Route::post('/karyawan/store', [KaryawanController::class, 'store'])->name('karyawan.store');
-        Route::post('/karyawan/absensi', [KaryawanController::class, 'absensi'])->name('karyawan.absensi');
-         Route::delete('/karyawan/{id}', [KaryawanController::class, 'destroy'])->name('karyawan.destroy');
         Route::get('/karyawan/{id}/info', [KaryawanController::class, 'info'])->name('karyawan.info');
-
-        
+        Route::post('/karyawan/absensi', [KaryawanController::class, 'absensi'])->name('karyawan.absensi');
+        Route::resource('karyawan', KaryawanController::class);
 
         // KEUANGAN
-        Route::get('/keuangan', [KeuanganController::class, 'index'])->name('keuangan.index');
-        Route::get('/keuangan/create', [KeuanganController::class, 'create'])->name('keuangan.create');
-        Route::post('/keuangan', [KeuanganController::class, 'store'])->name('keuangan.store');
+        Route::resource('keuangan', KeuanganController::class)->only(['index', 'create', 'store']);
 
-        // PEMESANAN ADMIN (Bisa melihat & update pesanan dari Reseller)
-        Route::get('/pesanan', [PesananAdminController::class, 'index'])->name('pesanan.index');
-        Route::get('/pesanan/create', [PesananAdminController::class, 'create'])->name('pesanan.create');
-        Route::post('/pesanan', [PesananAdminController::class, 'store'])->name('pesanan.store');
+        // PEMESANAN ADMIN
         Route::patch('/pesanan/{id}/status', [PesananAdminController::class, 'updateStatus'])->name('pesanan.status');
-        Route::delete('/pesanan/{id}', [PesananAdminController::class, 'destroy'])->name('pesanan.destroy');
+        Route::resource('pesanan', PesananAdminController::class);
 
         // MANAJEMEN RESELLER
-        Route::get('/reseller', [ResellerController::class, 'index'])->name('reseller.index');
-        Route::get('/reseller/create', [ResellerController::class, 'create'])->name('reseller.create');
-        Route::post('/reseller', [ResellerController::class, 'store'])->name('reseller.store');
-        Route::delete('/reseller/{id}', [ResellerController::class, 'destroy'])->name('reseller.destroy');
+        Route::resource('reseller', ResellerController::class);
 
-        // SETORAN RESELLER (Admin bisa melihat & update status laporan setoran dari Reseller)
-        Route::get('/setoran', [SetoranAdminController::class, 'index'])->name('setoran.index');
+        // SETORAN RESELLER
         Route::patch('/setoran/{id}', [SetoranAdminController::class, 'updateStatus'])->name('setoran.update');
-        Route::delete('/setoran/{id}', [SetoranAdminController::class, 'destroy'])->name('setoran.destroy');
+        Route::resource('setoran', SetoranAdminController::class)->only(['index', 'destroy']);
 
         // BARANG RESELLER (Katalog)
-        Route::get('/barang-reseller', [BarangResellerController::class, 'index'])->name('barang_reseller.index');
-        Route::get('/barang-reseller/create', [BarangResellerController::class, 'create'])->name('barang_reseller.create');
-        Route::post('/barang-reseller', [BarangResellerController::class, 'store'])->name('barang_reseller.store');
-        Route::delete('/barang-reseller/{id}', [BarangResellerController::class, 'destroy'])->name('barang_reseller.destroy');
+        Route::resource('barang-reseller', BarangResellerController::class)->names('barang_reseller');
 
-        // Route untuk menandai semua notifikasi sebagai "sudah dibaca"
-        Route::get('/notifications/mark-all-read', function () {auth()->user()->unreadNotifications->markAsRead(); return redirect()->back()->with('success', 'Semua notifikasi telah dibaca.');})->name('notifications.markAllRead');
-
-         // Route untuk menandai satu notifikasi saja sebagai "sudah dibaca"
-        Route::get('/notifications/{id}/mark-read', function ($id) {$notification = auth()->user()->notifications()->findOrFail($id);$notification->markAsRead();return redirect()->back();})->name('notifications.markRead');
-        
-        Route::get('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
-        Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
-        Route::delete('/notifications-clear', [NotificationController::class, 'clearAll'])->name('notifications.clearAll');
-
-        // PRODUKSI JADI
-        Route::resource('produksi_jadi', App\Http\Controllers\Admin\ProduksiJadiController::class)
-        ->names([
-        'index'   => 'admin.produksi_jadi.index',
-        'store'   => 'admin.produksi_jadi.store',
-        'destroy' => 'admin.produksi_jadi.destroy',
-         ])
-        ->only(['index', 'store', 'destroy']);
-
+        // NOTIFIKASI
+        Route::controller(NotificationController::class)->group(function () {
+            Route::get('/notifications/mark-all-read', 'markAllRead')->name('notifications.markAllRead');
+            Route::get('/notifications/{id}/mark-read', 'markRead')->name('notifications.markRead');
+            Route::delete('/notifications/{id}', 'destroy')->name('notifications.destroy');
+            Route::delete('/notifications-clear', 'clearAll')->name('notifications.clearAll');
+        });
     });
-    
 
 // ================= GRUP RESELLER =================
 Route::middleware(['auth', 'role:reseller'])
@@ -128,20 +100,11 @@ Route::middleware(['auth', 'role:reseller'])
         
         Route::get('/dashboard', fn() => view('reseller.dashboard'))->name('dashboard');
         
-        // PESANAN RESELLER
-        Route::get('/pesanan', [PesananController::class, 'index'])->name('pesanan.index');
-        Route::get('/pesanan/create', [PesananController::class, 'create'])->name('pesanan.create');
-        Route::post('/pesanan', [PesananController::class, 'store'])->name('pesanan.store');
         Route::patch('/pesanan/{id}/status', [PesananController::class, 'updateStatus'])->name('pesanan.status');
-        Route::delete('/pesanan/{id}', [PesananController::class, 'destroy'])->name('pesanan.destroy');
-
-        // SETORAN RESELLER
-        Route::get('/setoran', [SetoranController::class, 'index'])->name('setoran.index');
-        Route::get('/setoran/create', [SetoranController::class, 'create'])->name('setoran.create');
-        Route::post('/setoran', [SetoranController::class, 'store'])->name('setoran.store');
-        Route::delete('/setoran/{id}', [SetoranController::class, 'destroy'])->name('setoran.destroy');
-
-        // INFO BARANG RESELLER
+        Route::resource('pesanan', PesananController::class);
+        
+        Route::resource('setoran', SetoranController::class);
+        
         Route::get('/info-barang', [InfoBarangController::class, 'index'])->name('info_barang.index');
     });
 
