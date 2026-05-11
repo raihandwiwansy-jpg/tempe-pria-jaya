@@ -9,12 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
-    
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        
+
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #065f46; border-radius: 10px; }
@@ -64,14 +64,14 @@
 
 <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
 
-    <div x-show="sidebarOpen" 
+    <div x-show="sidebarOpen"
          x-transition.opacity
-         @click="sidebarOpen = false" 
+         @click="sidebarOpen = false"
          class="fixed inset-0 bg-black/60 z-[60] lg:hidden"></div>
 
-    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" 
+    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
            class="fixed inset-y-0 left-0 w-72 sidebar-gradient text-white flex flex-col transition-transform duration-300 transform lg:relative lg:translate-x-0 z-[70] shadow-2xl flex-shrink-0">
-        
+
         <div class="p-6 md:p-8 flex-shrink-0">
             <div class="flex items-center gap-3">
                 <div class="bg-yellow-400 p-2 rounded-xl text-green-900 shadow-lg shadow-yellow-400/20">
@@ -87,7 +87,7 @@
         <nav class="flex-1 px-4 overflow-y-auto pb-6 custom-scrollbar">
             <div class="mb-6">
                 <p class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] px-4 mb-2">Core Analytics</p>
-                
+
                 <a href="{{ url('/admin/dashboard') }}" class="nav-item {{ request()->is('admin/dashboard') ? 'nav-active' : '' }}">
                     <span class="material-symbols-rounded text-xl">dashboard</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Dashboard</span>
@@ -97,14 +97,14 @@
                     <span class="material-symbols-rounded text-xl">inventory_2</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Stok Gudang</span>
                 </a>
-                
+
                 {{-- MENU PRODUKSI (DIPISAH SUPAYA TIDAK MENTAL) --}}
                 <a href="{{ url('/admin/produksi') }}" class="nav-item {{ request()->is('admin/produksi') ? 'nav-active' : '' }}">
                     <span class="material-symbols-rounded text-xl">rebase_edit</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Bahan Baku</span>
                 </a>
 
-                <a href="{{ url('/admin/produksi_jadi') }}" class="nav-item {{ request()->is('admin/produksi_jadi*') ? 'nav-active' : '' }}">
+                <a href="{{ url('/admin/produksi-jadi') }}" class="nav-item {{ request()->is('admin/produksi-jadi*') ? 'nav-active' : '' }}">
                     <span class="material-symbols-rounded text-xl">inventory</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Produksi Jadi</span>
                 </a>
@@ -181,7 +181,7 @@
 
         <main class="flex-1 overflow-y-auto p-4 md:p-8 relative">
             <div class="fixed top-0 right-0 w-96 h-96 bg-green-200/10 rounded-full blur-[100px] pointer-events-none -z-10"></div>
-            
+
             <div class="animate-fade-in">
                 @yield('content')
             </div>
